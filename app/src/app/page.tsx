@@ -2,11 +2,43 @@
 
 import React, { useState } from 'react';
 import { UploadOutlined, UserOutlined, VideoCameraOutlined } from '@ant-design/icons';
-import { Layout, Menu, theme } from 'antd';
+import { Breadcrumb, Divider, Layout, List, Menu, theme } from 'antd';
 
 const { Header, Content, Footer, Sider } = Layout;
 
-export default function App() {
+const workouts = [
+  {
+    'id': 1,
+    'title': "Leg Day",
+    'data': [
+      'Squats, 150lbs, 3 sets of 8',
+      'Deadlift, 145lbs, 3 sets of 5',
+    ],
+  },
+  {
+    'id': 2,
+    'title': "Bench Day",
+    'data': [
+      'Chest Press, 90lbs, 3 sets of 6',
+      'Single-arm DB row, 32.5lbs, 3 sets of 10',
+    ],
+  },
+];
+
+const WorkoutDetail: React.FC<any> = ({ title, data }) => {
+  return (
+    <div>
+      <Divider orientation="left">{title}</Divider>
+      <List
+        bordered
+        dataSource={data}
+        renderItem={(item) => <List.Item>{item}</List.Item>}
+      />
+    </div>
+  );
+};
+
+const App: React.FC = () => {
   const {
     token: { colorBgContainer },
   } = theme.useToken();
@@ -39,8 +71,11 @@ export default function App() {
       </Sider>
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }} />
-        <Content style={{ margin: '24px 16px 0' }}>
-          <div style={{ padding: 24, minHeight: 720, background: colorBgContainer }}>content</div>
+        <Content className="site-layout" style={{ padding: '0 50px' }}>
+          <Breadcrumb items={[{ title: 'All Workouts' }, { title: 'Today\'s Workout' }]} />
+          <div style={{ padding: 24, minHeight: 720, background: colorBgContainer, color: 'black'}}>
+            {workouts.map((session) => <WorkoutDetail key={session.id} {...session} />)}
+          </div>
         </Content>
         <Footer style={{ textAlign: 'center' }}>Ant Design ©2023 Created by Ant UED</Footer>
       </Layout>
@@ -88,4 +123,4 @@ export default function App() {
 //   );
 // }
 
-
+export default App;
