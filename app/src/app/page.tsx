@@ -32,7 +32,7 @@ const WorkoutDetail: React.FC<any> = ({ title, data }) => {
       <List
         bordered
         dataSource={data}
-        renderItem={(item) => <List.Item>{item}</List.Item>}
+        renderItem={(item: string) => <List.Item>{item}</List.Item>}
       />
     </div>
   );
