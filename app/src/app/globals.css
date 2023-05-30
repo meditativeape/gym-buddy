@@ -1,4 +1,4 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -24,4 +24,21 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+} */
+
+.workouts-summary.ant-list .ant-list-item {
+  flex-wrap: wrap;
+}
+
+.workouts-summary.ant-list .ant-list-item .ant-list-item-meta {
+  order: 1;
+}
+
+.workouts-summary.ant-list .ant-list-item .ant-list-item-action {
+  order: 2;
+}
+
+.workouts-summary.ant-list .ant-list-item .ant-card {
+  order: 3;
+  flex: 0 0 100%;
 }
