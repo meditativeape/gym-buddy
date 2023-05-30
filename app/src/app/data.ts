@@ -11,10 +11,12 @@ export const workouts: Workout[] = [
           name: "Bench Press",
           sets: [
             {
+              id: 1,
               weight: 200,
               reps: 10,
             },
             {
+              id: 2,
               weight: 205,
               reps: 8,
             },
@@ -25,10 +27,12 @@ export const workouts: Workout[] = [
           name: "Squats",
           sets: [
             {
+              id: 1,
               weight: 250,
               reps: 10,
             },
             {
+              id: 2,
               weight: 255,
               reps: 8,
             },
@@ -51,10 +55,12 @@ export const workouts: Workout[] = [
           name: "Deadlift",
           sets: [
             {
+              id: 1,
               weight: 300,
               reps: 10,
             },
             {
+              id: 2,
               weight: 305,
               reps: 8,
             },
@@ -73,10 +79,12 @@ export const workouts: Workout[] = [
           name: "Single Arm Dumbbell Row",
           sets: [
             {
+              id: 1,
               weight: 30,
               reps: 10,
             },
             {
+              id: 2,
               weight: 30,
               reps: 8,
             },

@@ -1,4 +1,5 @@
 export interface ExerciseSet {
+  id: number,
   weight: number,
   reps: number,
 }

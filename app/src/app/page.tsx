@@ -46,6 +46,7 @@ const copyExercise: (exercise: Exercise) => Exercise = (exercise) => {
     ...exercise,
     sets: exercise.sets.map((s) => {
       return {
+        id: s.id,
         weight: s.weight,
         reps: s.reps,
       }
@@ -84,8 +85,8 @@ const WorkoutSummaryListItem : React.FC<WorkoutSummaryListItemProps> = (props) =
   const summary = (
     <List.Item
       actions={[
-        <Button size="middle" type="text" shape="circle" icon={<DownOutlined />} onClick={() => setShowMore(true)} />,
-        <Button size="middle" type="text" shape="circle" icon={<EditOutlined />} onClick={() => props.setWorkoutToEdit(props.workout.id)} />,
+        <Button size="middle" type="text" shape="circle" icon={<DownOutlined />} key={`${props.workout.id}-show-more`} onClick={() => setShowMore(true)} />,
+        <Button size="middle" type="text" shape="circle" icon={<EditOutlined />} key={`${props.workout.id}-edit`} onClick={() => props.setWorkoutToEdit(props.workout.id)} />,
       ]}
     >
       <List.Item.Meta
@@ -98,17 +99,17 @@ const WorkoutSummaryListItem : React.FC<WorkoutSummaryListItemProps> = (props) =
   const details = (
     <List.Item
       actions={[
-        <Button size="middle" type="text" shape="circle" icon={<UpOutlined />} onClick={() => setShowMore(false)} />,
-        <Button size="middle" type="text" shape="circle" icon={<EditOutlined />} onClick={() => props.setWorkoutToEdit(props.workout.id)} />,
+        <Button size="middle" type="text" shape="circle" icon={<UpOutlined />} key={`${props.workout.id}-show-less`} onClick={() => setShowMore(false)} />,
+        <Button size="middle" type="text" shape="circle" icon={<EditOutlined />} key={`${props.workout.id}-edit`} onClick={() => props.setWorkoutToEdit(props.workout.id)} />,
       ]}
     >
       <List.Item.Meta
         title={formatWorkoutTitle(props.workout)}
       />
       {props.workout.exercises.map((exercise) => {
-        return <Card title={exercise.name}>
+        return <Card title={exercise.name} key={`${exercise.id}-card`}>
           {exercise.sets.map((set) => {
-            return <p>{set.weight}</p>
+            return <p key={`${set.id}-card`}>{set.weight}lbs {set.reps}reps</p>
           })}
         </Card>
       })}
@@ -135,9 +136,10 @@ const ExerciseSet: React.FC<{ set: ExerciseSet, onSave: (set: ExerciseSet) => vo
   const [editing, setEditing] = useState(false);
   const [weight, setWeight] = useState(set.weight);
   const [reps, setReps] = useState(set.reps);
+  const id = set.id;
 
   const handleSave = () => {
-    onSave({ weight, reps });
+    onSave({ id, weight, reps });
     setEditing(false);
   };
 
