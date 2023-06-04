@@ -10,14 +10,15 @@ export interface Exercise {
   sets: ExerciseSet[],
 }
 
-export interface Superset {
-  exerciseIds: number[],
-}
-
 export interface Workout {
   id: number,
   date: Date,
   name: string,
   exercises: Exercise[],
-  supersets: Superset[],
+  supersets: number[],
+}
+
+export interface DeleteItemSpec {
+  exerciseId: number,
+  exerciseSetId: number,
 }

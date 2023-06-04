@@ -39,11 +39,7 @@ export const workouts: Workout[] = [
           ],
         },
       ],
-      supersets: [
-        {
-          exerciseIds: [1, 2],
-        },
-      ],
+      supersets: [1, 2],
     },
     {
       id: 2,

@@ -26,19 +26,32 @@ body {
     rgb(var(--background-start-rgb));
 } */
 
+body {
+  margin: 0px;
+}
+
 .workouts-summary.ant-list .ant-list-item {
   flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .workouts-summary.ant-list .ant-list-item .ant-list-item-meta {
   order: 1;
+  flex-basis: 70%;
+  align-self: flex-start;
 }
 
 .workouts-summary.ant-list .ant-list-item .ant-list-item-action {
   order: 2;
+  margin-inline-start: 0px;
+  align-self: flex-start;
 }
 
-.workouts-summary.ant-list .ant-list-item .ant-card {
+.workouts-summary.ant-list .ant-list-item .ant-list-item-action li {
+  padding: 0 2px;
+}
+
+.workouts-summary.ant-list .ant-list-item .ant-table-wrapper {
   order: 3;
   flex: 0 0 100%;
 }
