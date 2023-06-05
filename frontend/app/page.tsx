@@ -7,7 +7,7 @@ import type { ColumnsType } from 'antd/es/table';
 
 import { DeleteItemSpec, Exercise, ExerciseSet, Workout } from './interfaces';
 import { workouts as sampleWorkouts } from './data';
-import { addOrUpdateWorkout, createNewWorkout, copyWorkout, copyWorkouts, deleteWorkoutItem, formatDate, formatExerciseSets, formatWorkoutShortDesc, formatWorkoutTitle } from './util';
+import { addOrUpdateSet, addOrUpdateWorkout, createNewExercise, createNewWorkout, copyWorkout, copyWorkouts, deleteWorkoutItem, formatDate, formatExerciseSets, formatWorkoutShortDesc, formatWorkoutTitle } from './util';
 
 interface WorkoutsSummaryProps {
   workouts: Workout[];
@@ -164,17 +164,26 @@ const EditExerciseSetSpace: React.FC<EditExerciseSetProps> = ({ set, onSave, onD
 const EditExerciseCard: React.FC<EditExerciseProps> = ({ workout, exercise, setWorkout, onDeleteClick }) => {
   const handleSetChange = (updatedSet: ExerciseSet) => {
     const newWorkout = copyWorkout(workout);
-    const exerciseIdx = newWorkout.exercises.findIndex(item => item.id == exercise.id);
-    const setIdx = newWorkout.exercises[exerciseIdx].sets.findIndex(item => item.id == updatedSet.id);
-    newWorkout.exercises[exerciseIdx].sets[setIdx] = updatedSet;
+    addOrUpdateSet(newWorkout, exercise.id, updatedSet);
     setWorkout(newWorkout);
+  };
+
+  const handleAddSet = () => {
+    const newSet : ExerciseSet = {id: 1, weight: 0, reps: 0};
+    if (exercise.sets.length > 0) {
+      const lastSet = exercise.sets[exercise.sets.length - 1];
+      newSet.id = lastSet.id + 1;
+      newSet.reps = lastSet.reps;
+      newSet.weight = lastSet.weight;
+    }
+    handleSetChange(newSet);
   };
 
   return (
     <Card 
       title={exercise.name}
       actions={[
-        <PlusOutlined key="add" />,
+        <PlusOutlined key="add" onClick={handleAddSet}/>,
         <EditOutlined key="edit" />,
         <DeleteOutlined key="delete" onClick={() => onDeleteClick(exercise.id)} />,
       ]}
@@ -225,6 +234,13 @@ const EditWorkoutView: React.FC<EditWorkoutProps> = ({ workouts, workoutToEdit, 
     setIsDeleteModalOpen(false);
   };
 
+  const handleAddExercise = () => {
+    const newWorkout = copyWorkout(workout);
+    const newExercise = createNewExercise(newWorkout.exercises.length > 0 ? newWorkout.exercises[newWorkout.exercises.length - 1].id + 1 : 1);
+    newWorkout.exercises.push(newExercise);
+    setWorkout(newWorkout);
+  };
+
   return (
     <div>
       <List
@@ -241,7 +257,7 @@ const EditWorkoutView: React.FC<EditWorkoutProps> = ({ workouts, workoutToEdit, 
           </List.Item>
         )}
       />
-      <Button type="default">Add Workout</Button>
+      <Button type="default" onClick={handleAddExercise}>Add Exercise</Button>
       <Button type="primary" onClick={handleSaveWorkout}>Save</Button>
       <Button type="default" onClick={() => setWorkoutToEdit(null)}>Cancel</Button>
       <Modal title="Confirm Delete" open={isDeleteModalOpen} onOk={handleDeleteOk} onCancel={() => setIsDeleteModalOpen(false)}>

@@ -10,10 +10,22 @@ export const createNewWorkout: (id: number) => Workout = (id) => {
   };
 };
 
+export const createNewExercise: (id: number) => Exercise = (id) => {
+  return {
+    id: id,
+    name: "New Exercise",
+    sets: [],
+  };
+};
+
+const copyExerciseSet: (exerciseSet: ExerciseSet) => ExerciseSet = (exerciseSet) => {
+  return {...exerciseSet};
+};
+
 const copyExercise: (exercise: Exercise) => Exercise = (exercise) => {
   return {
     ...exercise,
-    sets: exercise.sets.map((exerciseSet) => {return {...exerciseSet}}),
+    sets: exercise.sets.map(copyExerciseSet),
   };
 };
 
@@ -36,6 +48,17 @@ export const addOrUpdateWorkout = (workouts: Workout[], newWorkout: Workout) => 
     workouts.push(newWorkout);
   } else {
     workouts[idx] = newWorkout;
+  }
+};
+
+export const addOrUpdateSet = (workout: Workout, exerciseId: number, exerciseSet: ExerciseSet) => {
+  const exercise = workout.exercises.find(item => item.id === exerciseId);
+  if (!exercise) return;
+  const setIdx = exercise.sets.findIndex(item => item.id === exerciseSet.id);
+  if (setIdx !== -1) {
+    exercise.sets[setIdx] = exerciseSet;
+  } else {
+    exercise.sets.push(exerciseSet);
   }
 };
 
