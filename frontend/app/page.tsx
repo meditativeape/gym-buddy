@@ -16,8 +16,10 @@ interface WorkoutsSummaryProps {
 
 interface EditExerciseSetProps {
   set: ExerciseSet;
+  editing: boolean;
   onSave: (set: ExerciseSet) => void;
   onDeleteClick: any;
+  setEditingId: any;
 }
 
 interface EditExerciseProps {
@@ -127,21 +129,20 @@ const WorkoutsSummaryList: React.FC<WorkoutsSummaryProps> = ({ workouts, setWork
   );
 };
 
-const EditExerciseSetSpace: React.FC<EditExerciseSetProps> = ({ set, onSave, onDeleteClick }) => {
-  const [editing, setEditing] = useState(false);
+const EditExerciseSetSpace: React.FC<EditExerciseSetProps> = ({ set, editing, onSave, onDeleteClick, setEditingId }) => {
   const [weight, setWeight] = useState(set.weight);
   const [reps, setReps] = useState(set.reps);
   const id = set.id;
 
   const handleSave = () => {
     onSave({ id, weight, reps });
-    setEditing(false);
+    setEditingId(-1);
   };
 
   const handleCancel = () => {
     setWeight(set.weight);
     setReps(set.reps);
-    setEditing(false);
+    setEditingId(-1);
   };
 
   return editing ? (
@@ -155,13 +156,15 @@ const EditExerciseSetSpace: React.FC<EditExerciseSetProps> = ({ set, onSave, onD
     <Space>
       <span>{weight} lbs</span>
       <span>{reps} reps</span>
-      <Button size="small" type="text" icon={<EditOutlined />} onClick={() => setEditing(true)} />
+      <Button size="small" type="text" icon={<EditOutlined />} onClick={() => setEditingId(id)} />
       <Button size="small" type="text" icon={<DeleteOutlined />} onClick={onDeleteClick} />
     </Space>
   );
 };
 
 const EditExerciseCard: React.FC<EditExerciseProps> = ({ workout, exercise, setWorkout, onDeleteClick }) => {
+  const [editingId, setEditingId] = useState(-1);
+
   const handleSetChange = (updatedSet: ExerciseSet) => {
     const newWorkout = copyWorkout(workout);
     addOrUpdateSet(newWorkout, exercise.id, updatedSet);
@@ -177,6 +180,7 @@ const EditExerciseCard: React.FC<EditExerciseProps> = ({ workout, exercise, setW
       newSet.weight = lastSet.weight;
     }
     handleSetChange(newSet);
+    setEditingId(newSet.id);
   };
 
   return (
@@ -194,8 +198,10 @@ const EditExerciseCard: React.FC<EditExerciseProps> = ({ workout, exercise, setW
           <List.Item key={set.id}>
             <EditExerciseSetSpace 
               set={set}
+              editing={editingId === set.id}
               onSave={handleSetChange}
               onDeleteClick={() => onDeleteClick(exercise.id, set.id)}
+              setEditingId={setEditingId}
             />
           </List.Item>
         )}
