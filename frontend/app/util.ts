@@ -1,78 +1,13 @@
-import { DeleteItemSpec, Exercise, ExerciseSet, Workout } from './interfaces';
+import { ExerciseSet, Workout } from './interfaces';
 
-export const createNewWorkout: (id: number) => Workout = (id) => {
+export const createWorkout: (id: number, name: string) => Workout = (id, name) => {
   return {
     id: id,
     date: new Date(),
-    name: "New Workout",
+    name: name,
     exercises: [],
     supersets: [],
   };
-};
-
-export const createNewExercise: (id: number) => Exercise = (id) => {
-  return {
-    id: id,
-    name: "New Exercise",
-    sets: [],
-  };
-};
-
-const copyExerciseSet: (exerciseSet: ExerciseSet) => ExerciseSet = (exerciseSet) => {
-  return {...exerciseSet};
-};
-
-const copyExercise: (exercise: Exercise) => Exercise = (exercise) => {
-  return {
-    ...exercise,
-    sets: exercise.sets.map(copyExerciseSet),
-  };
-};
-
-export const copyWorkout: (workout: Workout) => Workout = (workout) => {
-  const workoutCopy: Workout = {
-    ...workout,
-    exercises: workout.exercises.map(copyExercise),
-    supersets: [...workout.supersets],
-  }
-  return workoutCopy;
-};
-
-export const copyWorkouts: (workouts: Workout[]) => Workout[] = (workouts) => {
-  return workouts.map(copyWorkout);
-};
-
-export const addOrUpdateWorkout = (workouts: Workout[], newWorkout: Workout) => {
-  const idx = workouts.findIndex(item => item.id == newWorkout.id);
-  if (idx === -1) {
-    workouts.push(newWorkout);
-  } else {
-    workouts[idx] = newWorkout;
-  }
-};
-
-export const addOrUpdateSet = (workout: Workout, exerciseId: number, exerciseSet: ExerciseSet) => {
-  const exercise = workout.exercises.find(item => item.id === exerciseId);
-  if (!exercise) return;
-  const setIdx = exercise.sets.findIndex(item => item.id === exerciseSet.id);
-  if (setIdx !== -1) {
-    exercise.sets[setIdx] = exerciseSet;
-  } else {
-    exercise.sets.push(exerciseSet);
-  }
-};
-
-export const deleteWorkoutItem: (workout: Workout, spec: DeleteItemSpec) => void = (workout, spec) => {
-  if (spec.exerciseSetId <= -1) { 
-    // Delete exercise
-    workout.exercises = workout.exercises.filter(item => item.id != spec.exerciseId);
-    workout.supersets = workout.supersets.filter(item => item != spec.exerciseId);
-    return;
-  }
-  // Delete exercise set
-  const targetExercise = workout.exercises.find(item => item.id == spec.exerciseId);
-  if (!targetExercise) return;
-  targetExercise.sets = targetExercise.sets.filter(item => item.id != spec.exerciseSetId);
 };
 
 /**
@@ -101,3 +36,130 @@ export const formatWorkoutTitle = (workout: Workout) => {
 export const formatWorkoutShortDesc = (workout: Workout) => {
   return workout.exercises.map(exercise => exercise.name).join(', ');
 };
+
+/**
+ * Reducer functions.
+ */
+
+export const workoutReducer: (workout: Workout, action: any) => Workout = (workout, action) => {
+  console.log(action);
+  switch (action.type) {
+    case 'addExercise':
+      const exerciseId = Math.max(...workout.exercises.map(e => e.id)) + 1;
+      return {
+        ...workout,
+        exercises: [
+          ...workout.exercises,
+          {
+            id: exerciseId,
+            name: action.exerciseName,
+            sets: [],
+          }
+        ]
+      };
+    case 'updateExerciseName':
+      return {
+        ...workout,
+        exercises: workout.exercises.map(e => {
+          if (e.id == action.exerciseId) {
+            return {
+              ...e,
+              name: action.exerciseName,
+            }
+          }
+          return e;
+        }),
+      };
+    case 'deleteExercise':
+      return {
+        ...workout,
+        exercises: workout.exercises.filter(e => e.id !== action.exerciseId),
+      };
+    case 'addExerciseSet':
+      return {
+        ...workout,
+        exercises: workout.exercises.map(e => {
+          if (e.id == action.exerciseId) {
+            return {
+              ...e,
+              sets: [
+                ...e.sets,
+                action.exerciseSet,
+              ],
+            };
+          }
+          return e;
+        }),
+      };
+    case 'updateExerciseSet':
+      return {
+        ...workout,
+        exercises: workout.exercises.map(e => {
+          if (e.id == action.exerciseId) {
+            return {
+              ...e,
+              sets: e.sets.map(s => {
+                if (s.id == action.exerciseSet.id) {
+                  return action.exerciseSet;
+                }
+                return s;
+              }),
+            };
+          }
+          return e;
+        }),
+      };
+    case 'deleteExerciseSet':
+      return {
+        ...workout,
+        exercises: workout.exercises.map(e => {
+          if (e.id == action.exerciseId) {
+            return {
+              ...e,
+              sets: e.sets.filter(s => s.id !== action.exerciseSetId),
+            };
+          }
+          return e;
+        }),
+      };
+    case 'addSuperset':
+      return {
+        ...workout,
+        supersets: [...workout.supersets, action.exerciseId]
+      };
+    case 'deleteSuperset':
+      return {
+        ...workout,
+        supersets: workout.supersets.filter(e => e !== action.exerciseId),
+      };
+    default: {
+      throw Error('Unknown action: ' + action.type);
+    }
+  }
+}
+
+export const workoutsReducer: (workouts: Workout[], action: any) => Workout[] = (workouts, action) => {
+  console.log(action);
+  switch (action.type) {
+    case 'updateWorkout':
+      const idx = workouts.findIndex(item => item.id == action.workout.id);
+      if (idx === -1) {
+        return [
+          ...workouts,
+          action.workout,
+        ];
+      } else {
+        return workouts.map(w => {
+          if (w.id === action.workout.id) {
+            return action.workout;
+          } else {
+            return w;
+          }
+        });
+      }
+    default: {
+        throw Error('Unknown action: ' + action.type);
+      }
+  }
+};
+  

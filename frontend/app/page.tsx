@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useReducer } from 'react';
 import { CloseOutlined, DeleteOutlined, DownOutlined, EditOutlined, PlusOutlined, SaveOutlined, UpOutlined } from '@ant-design/icons';
-import { Button, Card, InputNumber, Layout, List, Modal, Space, Table, theme } from 'antd';
+import { Button, Card, Checkbox, Input, InputNumber, Layout, List, Modal, Space, Table, theme } from 'antd';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import type { ColumnsType } from 'antd/es/table';
 
 import { DeleteItemSpec, Exercise, ExerciseSet, Workout } from './interfaces';
 import { workouts as sampleWorkouts } from './data';
-import { addOrUpdateSet, addOrUpdateWorkout, createNewExercise, createNewWorkout, copyWorkout, copyWorkouts, deleteWorkoutItem, formatDate, formatExerciseSets, formatWorkoutShortDesc, formatWorkoutTitle } from './util';
+import { createWorkout, formatExerciseSets, formatWorkoutShortDesc, formatWorkoutTitle, workoutReducer, workoutsReducer } from './util';
+
 
 interface WorkoutsSummaryProps {
   workouts: Workout[];
@@ -25,14 +27,14 @@ interface EditExerciseSetProps {
 interface EditExerciseProps {
   workout: Workout;
   exercise: Exercise;
-  setWorkout: any;
+  workoutDispatch: any;
   onDeleteClick: any;
 }
 
 interface EditWorkoutProps {
   workouts: Workout[];
   workoutToEdit: Workout;
-  setWorkouts: any;
+  workoutsDispatch: any;
   setWorkoutToEdit: any;
 }
 
@@ -48,9 +50,7 @@ interface WorkoutColumnDataType {
   isSuperset: boolean;
 }
 
-const { Header, Content, Footer, Sider } = Layout;
-
-
+const { Header, Content } = Layout;
 
 const WorkoutSummaryListItem : React.FC<WorkoutSummaryListItemProps> = ({ workout, setWorkoutToEdit }) => {
   const [showMore, setShowMore] = useState<boolean>(false);
@@ -78,7 +78,7 @@ const WorkoutSummaryListItem : React.FC<WorkoutSummaryListItemProps> = ({ workou
     <List.Item
       actions={[
         <Button size="middle" type="text" shape="circle" icon={<DownOutlined />} key={`${workout.id}-show-more`} onClick={() => setShowMore(true)} />,
-        <Button size="middle" type="text" shape="circle" icon={<EditOutlined />} key={`${workout.id}-edit`} onClick={() => setWorkoutToEdit(copyWorkout(workout))} />,
+        <Button size="middle" type="text" shape="circle" icon={<EditOutlined />} key={`${workout.id}-edit`} onClick={() => setWorkoutToEdit(workout)} />,
       ]}
     >
       <List.Item.Meta
@@ -92,7 +92,7 @@ const WorkoutSummaryListItem : React.FC<WorkoutSummaryListItemProps> = ({ workou
     <List.Item
       actions={[
         <Button size="middle" type="text" shape="circle" icon={<UpOutlined />} key={`${workout.id}-show-less`} onClick={() => setShowMore(false)} />,
-        <Button size="middle" type="text" shape="circle" icon={<EditOutlined />} key={`${workout.id}-edit`} onClick={() => setWorkoutToEdit(copyWorkout(workout))} />,
+        <Button size="middle" type="text" shape="circle" icon={<EditOutlined />} key={`${workout.id}-edit`} onClick={() => setWorkoutToEdit(workout)} />,
       ]}
     >
       <List.Item.Meta
@@ -162,33 +162,75 @@ const EditExerciseSetSpace: React.FC<EditExerciseSetProps> = ({ set, editing, on
   );
 };
 
-const EditExerciseCard: React.FC<EditExerciseProps> = ({ workout, exercise, setWorkout, onDeleteClick }) => {
+const EditExerciseCard: React.FC<EditExerciseProps> = ({ workout, exercise, workoutDispatch, onDeleteClick }) => {
+  const [exerciseName, setExerciseName] = useState(exercise.name);
   const [editingId, setEditingId] = useState(-1);
+  const [editingExerciseName, setEditingExerciseName] = useState(false);
 
-  const handleSetChange = (updatedSet: ExerciseSet) => {
-    const newWorkout = copyWorkout(workout);
-    addOrUpdateSet(newWorkout, exercise.id, updatedSet);
-    setWorkout(newWorkout);
+  const handleUpdateExerciseSet = (updatedSet: ExerciseSet) => {
+    workoutDispatch({
+      type: 'updateExerciseSet',
+      exerciseId: exercise.id,
+      exerciseSet: updatedSet,
+    });
   };
 
-  const handleAddSet = () => {
-    const newSet : ExerciseSet = {id: 1, weight: 0, reps: 0};
+  const handleAddExerciseSet = () => {
+    const newSet: ExerciseSet = {id: 1, weight: 0, reps: 0};
     if (exercise.sets.length > 0) {
       const lastSet = exercise.sets[exercise.sets.length - 1];
       newSet.id = lastSet.id + 1;
-      newSet.reps = lastSet.reps;
       newSet.weight = lastSet.weight;
+      newSet.reps = lastSet.reps;
     }
-    handleSetChange(newSet);
+    workoutDispatch({
+      type: 'addExerciseSet',
+      exerciseId: exercise.id,
+      exerciseSet: newSet,
+    });
     setEditingId(newSet.id);
+  };
+
+  const handleSaveExerciseName = () => {
+    workoutDispatch({
+      type: 'updateExerciseName',
+      exerciseId: exercise.id,
+      exerciseName: exerciseName,
+    });
+    setEditingExerciseName(false);
+  };
+
+  const handleCancelExerciseName = () => {
+    setExerciseName(exercise.name);
+    setEditingExerciseName(false);
+  };
+
+  const handleCheckboxChange = (e: CheckboxChangeEvent) => {
+    if (e.target.checked) {
+      workoutDispatch({
+        type: 'addSuperset',
+        exerciseId: exercise.id,
+      });
+    } else {
+      workoutDispatch({
+        type: 'deleteSuperset',
+        exerciseId: exercise.id,
+      });
+    }
   };
 
   return (
     <Card 
-      title={exercise.name}
+      title={editingExerciseName ? 
+        <Space>
+          <Input value={exerciseName} onChange={e => setExerciseName(e.target.value)} placeholder="Exercise Name" />
+          <Button size="small" type="text" icon={<SaveOutlined />} onClick={handleSaveExerciseName} />
+          <Button size="small" type="text" icon={<CloseOutlined />} onClick={handleCancelExerciseName} />
+        </Space>
+        : exercise.name}
       actions={[
-        <PlusOutlined key="add" onClick={handleAddSet}/>,
-        <EditOutlined key="edit" />,
+        <PlusOutlined key="add" onClick={handleAddExerciseSet}/>,
+        <EditOutlined key="edit" onClick={() => setEditingExerciseName(true)}/>,
         <DeleteOutlined key="delete" onClick={() => onDeleteClick(exercise.id)} />,
       ]}
       >
@@ -196,22 +238,23 @@ const EditExerciseCard: React.FC<EditExerciseProps> = ({ workout, exercise, setW
         dataSource={exercise.sets}
         renderItem={(set, _) => (
           <List.Item key={set.id}>
-            <EditExerciseSetSpace 
+            <EditExerciseSetSpace
               set={set}
               editing={editingId === set.id}
-              onSave={handleSetChange}
+              onSave={handleUpdateExerciseSet}
               onDeleteClick={() => onDeleteClick(exercise.id, set.id)}
               setEditingId={setEditingId}
             />
           </List.Item>
         )}
       />
+      <Checkbox checked={workout.supersets.findIndex(item => item === exercise.id) !== -1} onChange={handleCheckboxChange}>Is Superset</Checkbox>
     </Card>
   );
 };
 
-const EditWorkoutView: React.FC<EditWorkoutProps> = ({ workouts, workoutToEdit, setWorkouts, setWorkoutToEdit }) => {
-  const [workout, setWorkout] = useState<Workout>(workoutToEdit);
+const EditWorkoutView: React.FC<EditWorkoutProps> = ({ workouts, workoutToEdit, workoutsDispatch, setWorkoutToEdit }) => {
+  const [workout, workoutDispatch] = useReducer(workoutReducer, workoutToEdit);
   const [itemToDelete, setItemToDelete] = useState<DeleteItemSpec>({
     exerciseId: -1,
     exerciseSetId: -1,
@@ -219,10 +262,18 @@ const EditWorkoutView: React.FC<EditWorkoutProps> = ({ workouts, workoutToEdit, 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
 
   const handleSaveWorkout = () => {
-    const newWorkouts = copyWorkouts(workouts);
-    addOrUpdateWorkout(newWorkouts, workout);
-    setWorkouts(newWorkouts);
+    workoutsDispatch({
+      type: 'updateWorkout',
+      workout: workout,
+    });
     setWorkoutToEdit(null);
+  };
+
+  const handleAddExercise = () => {
+    workoutDispatch({
+      type: 'addExercise', 
+      exerciseName: 'Beck'
+    });
   };
 
   const handleDeleteClick = (exerciseId?: number, exerciseSetId? : number) => {
@@ -234,17 +285,21 @@ const EditWorkoutView: React.FC<EditWorkoutProps> = ({ workouts, workoutToEdit, 
   };
 
   const handleDeleteOk = () => {
-    const newWorkout = copyWorkout(workout);
-    deleteWorkoutItem(newWorkout, itemToDelete);
-    setWorkout(newWorkout);
+    if (itemToDelete.exerciseId > -1) {
+      if (itemToDelete.exerciseSetId > -1) {
+        workoutDispatch({
+          type: 'deleteExerciseSet',
+          exerciseId: itemToDelete.exerciseId,
+          exerciseSetId: itemToDelete.exerciseSetId,
+        });
+      } else {
+        workoutDispatch({
+          type: 'deleteExercise',
+          exerciseId: itemToDelete.exerciseId,
+        });
+      }
+    }
     setIsDeleteModalOpen(false);
-  };
-
-  const handleAddExercise = () => {
-    const newWorkout = copyWorkout(workout);
-    const newExercise = createNewExercise(newWorkout.exercises.length > 0 ? newWorkout.exercises[newWorkout.exercises.length - 1].id + 1 : 1);
-    newWorkout.exercises.push(newExercise);
-    setWorkout(newWorkout);
   };
 
   return (
@@ -257,7 +312,7 @@ const EditWorkoutView: React.FC<EditWorkoutProps> = ({ workouts, workoutToEdit, 
               key={exercise.id}
               workout={workout}
               exercise={exercise} 
-              setWorkout={setWorkout}
+              workoutDispatch={workoutDispatch}
               onDeleteClick={handleDeleteClick} 
             />
           </List.Item>
@@ -274,21 +329,23 @@ const EditWorkoutView: React.FC<EditWorkoutProps> = ({ workouts, workoutToEdit, 
 };
 
 const MainContent: React.FC<{ colorBgContainer: string }> = ({ colorBgContainer }) => {
-  const [workouts, setWorkouts] = useState<Workout[]>(sampleWorkouts);
+  const [workouts, workoutsDispatch] = useReducer(workoutsReducer, sampleWorkouts);
   const [workoutToEdit, setWorkoutToEdit] = useState<Workout | null>(null);
+
+  const handleAddWorkout = () => {
+    const workoutId = Math.max(...workouts.map(w => w.id)) + 1;
+    setWorkoutToEdit(createWorkout(workoutId, "New Workout"));
+  };
 
   return (
     <div>
       <Content className="site-layout" style={{ padding: '0 2rem' }}>
         {workoutToEdit ? (
-          <EditWorkoutView workouts={workouts} setWorkouts={setWorkouts} workoutToEdit={workoutToEdit} setWorkoutToEdit={setWorkoutToEdit} />
+          <EditWorkoutView workouts={workouts} workoutsDispatch={workoutsDispatch} workoutToEdit={workoutToEdit} setWorkoutToEdit={setWorkoutToEdit} />
         ) : (
           <div style={{ padding: '0 1rem', minHeight: 720, background: colorBgContainer, color: 'black'}}>
-            <WorkoutsSummaryList workouts={workouts} setWorkoutToEdit={setWorkoutToEdit}/>
-            {/* Fix workoutToEdit ID */}
-            <Button size="large" type="default" shape="circle" icon={<PlusOutlined />} 
-              onClick={() => setWorkoutToEdit(createNewWorkout(workouts[workouts.length - 1].id + 1))} 
-            />
+            <WorkoutsSummaryList workouts={workouts} setWorkoutToEdit={setWorkoutToEdit} />
+            <Button size="large" type="default" shape="circle" icon={<PlusOutlined />} onClick={handleAddWorkout} />
           </div>
         )}
       </Content>
@@ -303,30 +360,6 @@ const App: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: '100dvh' }}>
-      {/* <Sider
-        breakpoint="md"
-        collapsedWidth="0"
-        onBreakpoint={(broken) => {
-          console.log(broken);
-        }}
-        onCollapse={(collapsed, type) => {
-          console.log(collapsed, type);
-        }}
-      >
-        <div className="demo-logo-vertical" />
-        <Menu
-          theme="dark"
-          mode="inline"
-          defaultSelectedKeys={['4']}
-          items={[UserOutlined, VideoCameraOutlined, UploadOutlined, UserOutlined].map(
-            (icon, index) => ({
-              key: String(index + 1),
-              icon: React.createElement(icon),
-              label: `nav ${index + 1}`,
-            }),
-          )}
-        />
-      </Sider> */}
       <Layout style={{ position: 'relative' }}>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <MainContent colorBgContainer={ colorBgContainer } />
