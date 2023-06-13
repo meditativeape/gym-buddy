@@ -1,14 +1,12 @@
-'use client';
-
 import React, { useState, useReducer } from 'react';
 import { CloseOutlined, DeleteOutlined, DownOutlined, EditOutlined, PlusOutlined, SaveOutlined, UpOutlined } from '@ant-design/icons';
-import { Button, Card, Checkbox, Input, InputNumber, Layout, List, Modal, Space, Table, theme } from 'antd';
+import { Button, Card, Checkbox, Image, Input, InputNumber, Layout, List, Menu, Modal, Space, Table, theme } from 'antd';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import type { ColumnsType } from 'antd/es/table';
 
-import { DeleteItemSpec, Exercise, ExerciseSet, Workout } from './interfaces';
-import { workouts as sampleWorkouts } from './data';
-import { createWorkout, formatExerciseSets, formatWorkoutShortDesc, formatWorkoutTitle, workoutReducer, workoutsReducer } from './util';
+import { DeleteItemSpec, Exercise, ExerciseSet, Workout } from '../model/interfaces';
+import { workouts as sampleWorkouts } from '../model/data';
+import { createWorkout, formatExerciseSets, formatWorkoutShortDesc, formatWorkoutTitle, workoutReducer, workoutsReducer } from '../model/util';
 
 
 interface WorkoutsSummaryProps {
@@ -359,13 +357,16 @@ const App: React.FC = () => {
   } = theme.useToken();
 
   return (
-    <Layout style={{ minHeight: '100dvh' }}>
-      <Layout style={{ position: 'relative' }}>
-        <Header style={{ padding: 0, background: colorBgContainer }} />
-        <MainContent colorBgContainer={ colorBgContainer } />
-      </Layout>
+    <Layout>
+      <MainContent colorBgContainer={ colorBgContainer } />
     </Layout>
   );
 };
+
+// const App: React.FC = () => {
+//   return (
+//     <p>Body</p>
+//   );
+// };
 
 export default App;
